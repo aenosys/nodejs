@@ -1,4 +1,4 @@
-# Stage 1: Build and run the Node.js application
+# Stage 1: Build the Node.js application
 FROM node:16 AS node_app
 
 # Set the working directory
@@ -11,22 +11,18 @@ RUN npm install
 # Copy the rest of the application code
 COPY . .
 
-# Expose the application port
-EXPOSE 3000
-
-# Start the Node.js server
-CMD ["node", "index.js"]
-
-# Stage 2: Configure and run Nginx
+# Stage 2: Configure Nginx and run both processes
 FROM nginx:stable-alpine
 
-# Copy the Node.js application from the first stage
-COPY --from=node_app /app /usr/share/nginx/html
+# Install supervisor for process management
+RUN apk add --no-cache supervisor
 
-# Create an Nginx configuration file
+# Copy the Node.js application from the first stage
+COPY --from=node_app /app /app
+
+# Configure Nginx
 RUN echo 'server { \
     listen 80; \
-    \
     location / { \
         proxy_pass http://localhost:3000; \
         proxy_http_version 1.1; \
@@ -37,8 +33,20 @@ RUN echo 'server { \
     } \
 }' > /etc/nginx/conf.d/default.conf
 
-# Expose Nginx port
-EXPOSE 80
+# Add Supervisor configuration
+RUN echo '[supervisord] \
+nodaemon=true \
+[program:node] \
+command=node /app/index.js \
+autostart=true \
+autorestart=true \
+[program:nginx] \
+command=nginx -g "daemon off;" \
+autostart=true \
+autorestart=true' > /etc/supervisord.conf
 
-# Start Nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Expose the required ports
+EXPOSE 3000 80
+
+# Start Supervisor to manage both Node.js and Nginx
+CMD ["supervisord", "-c", "/etc/supervisord.conf"]
