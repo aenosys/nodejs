@@ -31,7 +31,7 @@ RUN npm install
 COPY . .
 
 # Expose the application port and SSH port
-EXPOSE 6750 22
+EXPOSE 3000 22
 
 # Start SSH and your application
 CMD service ssh start && node index.js
