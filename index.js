@@ -37,6 +37,34 @@ app.get('/health', (req, res) => {
   res.status(200).json(healthStatus);
 });
 
+// --- START: NEW TEST ENDPOINT ---
+/**
+ * @route GET /env
+ * @description Exposes specific environment variables for debugging purposes.
+ * This is the ultimate test. It asks the Node.js process itself to report
+ * what it sees in its own environment.
+ */
+app.get('/env', (req, res) => {
+  console.log(`[${new Date().toLocaleTimeString()}] Request received for /env. Reporting environment variables.`);
+  
+  // Pick out the specific variables we want to check.
+  // In a real application, you should be very careful about exposing environment
+  // variables, as they can contain sensitive data.
+  const relevantEnvVars = {
+    testkey1: process.env.testkey1 || 'NOT FOUND',
+    testkey2: process.env.testkey2 || 'NOT FOUND',
+    // You can add any other variables you expect to be there.
+    // For example, Kubernetes injects some of its own:
+    KUBERNETES_SERVICE_HOST: process.env.KUBERNETES_SERVICE_HOST || 'NOT FOUND',
+  };
+
+  res.status(200).json({
+    message: "Environment variables as seen by the Node.js process:",
+    variables: relevantEnvVars,
+  });
+});
+// --- END: NEW TEST ENDPOINT ---
+
 
 // --- External Public API Endpoints ---
 // These routes demonstrate the server making requests to other APIs on the internet.
@@ -66,7 +94,7 @@ app.get('/posts', async (req, res) => {
 /**
  * @route GET /random-fact
  * @description Fetches a random useless fact.
- * This simulates calling a fun, third-party utility API.
+ * This simulates calling a fun, third-party utility utility API.
  * Egress Rule Required: Allow traffic to `uselessfacts.jsph.pl` on port 443 (HTTPS).
  */
 app.get('/random-fact', async (req, res) => {
@@ -93,6 +121,7 @@ app.listen(port, () => {
   console.log('Test Endpoints:');
   console.log(`- http://localhost:${port}/`);
   console.log(`- http://localhost:${port}/health`);
+  console.log(`- http://localhost:${port}/env   <-- NEW TEST ENDPOINT`);
   console.log(`- http://localhost:${port}/posts`);
   console.log(`- http://localhost:${port}/random-fact`);
   console.log(`=============================================`);
