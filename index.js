@@ -53,6 +53,8 @@ app.get('/env', (req, res) => {
   const relevantEnvVars = {
     testkey1: process.env.testkey1 || 'NOT FOUND',
     testkey2: process.env.testkey2 || 'NOT FOUND',
+    testkey3: process.env.testkey3 || 'NOT FOUND',
+    testkey4: process.env.testkey4 || 'NOT FOUND',
     // You can add any other variables you expect to be there.
     // For example, Kubernetes injects some of its own:
     KUBERNETES_SERVICE_HOST: process.env.KUBERNETES_SERVICE_HOST || 'NOT FOUND',
