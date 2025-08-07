@@ -25,7 +25,6 @@ app.get('/', (req, res) => {
 });
 
 // --- Internal API Endpoints ---
-// These are routes that provide information about the service itself.
 
 /**
  * @route GET /health
