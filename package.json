@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/stacknow/nodejs#readme",
   "dependencies": {
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "express-fileupload": "^1.5.2"
   }
 }
