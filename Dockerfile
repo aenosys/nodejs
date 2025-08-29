@@ -20,4 +20,4 @@ COPY . .
 EXPOSE 3000
 # (Optional) Specify a command to run your application
 # For example, if your application starts with "node server.js":
-CMD ["node", "server.js"]
+CMD ["node", "index.js"]
