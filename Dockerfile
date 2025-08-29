@@ -1,43 +1,52 @@
-# Use an official Node image as the base. It includes a non-root 'node' user.
-FROM node:latest
+# =================================================================
+# STAGE 1: The "Builder"
+# We use a full Alpine image here because it has the build tools
+# we need to install dependencies.
+# =================================================================
+FROM node:18-alpine AS builder
 
-# Set the working directory for the application
 WORKDIR /app
 
-# 1. Update package lists and install the OpenSSH server
-# 2. Clean up the apt cache to keep the image size down
-RUN apt-get update && \
-    apt-get install -y openssh-server && \
-    rm -rf /var/lib/apt/lists/*
-
-# 1. Create the .ssh directories for users you intend to support.
-#    The /var/run/sshd directory will be created by the service script at runtime.
-RUN mkdir -p /root/.ssh && \
-    chmod 700 /root/.ssh && \
-    mkdir -p /home/node/.ssh && \
-    chown node:node /home/node/.ssh && \
-    chmod 700 /home/node/.ssh
-
-# Configure the SSH Server for a secure, key-only setup
-RUN sed -i 's/^#?PermitRootLogin .*/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config && \
-    sed -i 's/^#?PubkeyAuthentication .*/PubkeyAuthentication yes/' /etc/ssh/sshd_config && \
-    sed -i 's/^#?PasswordAuthentication .*/PasswordAuthentication no/' /etc/ssh/sshd_config && \
-    sed -i 's/^#?ChallengeResponseAuthentication .*/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
-
-# --- NO 'COPY authorized_keys' is needed here. Your app does this at runtime. ---
-
-# Copy application dependency files
+# Copy dependency files
 COPY package*.json ./
-# Install app dependencies
+
+# Install ALL dependencies, including devDependencies needed for building
 RUN npm install
 
-# Copy the rest of your application files
+# Copy the rest of your application source code
 COPY . .
 
-# Expose the application port and the SSH port
-EXPOSE 3000 22 # Assuming your app runs on 3000
+# If you have a build step (e.g., for TypeScript), run it here
+# RUN npm run build
 
-# FIX: Use the service wrapper to ensure all prerequisites are met at runtime.
-# This command starts the SSH service in the background and executes the Node.js application
-# in the foreground. 'exec' makes the Node app the main process.
-CMD service ssh start && exec node index.js
+# =================================================================
+# STAGE 2: The Final Production Image
+# We start from a fresh, clean Alpine image. This image will be
+# incredibly small.
+# =================================================================
+FROM node:18-alpine
+
+WORKDIR /app
+
+# --- CRITICAL STEP ---
+# Copy ONLY the production dependencies from the 'builder' stage.
+# We also copy package.json so the app can see its version, etc.
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/node_modules ./
+
+# --- CRITICAL STEP ---
+# Copy ONLY your application's compiled code (or source if not compiled).
+# For this example, we assume the entrypoint is index.js
+COPY --from=builder /app/index.js ./
+# If you have a 'dist' folder, you would copy that instead:
+# COPY --from=builder /app/dist ./dist
+
+# The 'node' user is included in the official Node images.
+# It's a good security practice to run as a non-root user.
+USER node
+
+# Expose the application port
+EXPOSE 3000
+
+# The command to run your application
+CMD [ "node", "index.js" ]
