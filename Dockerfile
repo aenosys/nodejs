@@ -17,7 +17,7 @@ RUN npm install
 # Copy the rest of the application source code to the working directory
 COPY . .
 
-EXPOSE 3000
+#EXPOSE 3000
 # (Optional) Specify a command to run your application
 # For example, if your application starts with "node server.js":
-CMD ["node", "index.js"]
+#CMD ["node", "index.js"]
