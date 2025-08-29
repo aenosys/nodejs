@@ -1,5 +1,9 @@
-# Use an official Node.js runtime as a parent image, based on Alpine Linux
-FROM node:18-alpine
+# Use Alpine Linux as a parent image
+FROM alpine:latest
+
+# Install Node.js, npm, and Python
+RUN apk update && \
+    apk add --no-cache nodejs npm python3
 
 # Set the working directory in the container
 WORKDIR /app
@@ -13,3 +17,6 @@ RUN npm install
 # Copy the rest of the application source code to the working directory
 COPY . .
 
+# (Optional) Specify a command to run your application
+# For example, if your application starts with "node server.js":
+# CMD ["node", "server.js"]
