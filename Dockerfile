@@ -1,9 +1,9 @@
 # Use Alpine Linux as a parent image
 FROM alpine:latest
 
-# Install Node.js, npm, and Python
+# Install Node.js, npm, Python, and other utilities
 RUN apk update && \
-    apk add --no-cache nodejs npm python3
+    apk add --no-cache nodejs npm python3 nano curl wget
 
 # Set the working directory in the container
 WORKDIR /app
